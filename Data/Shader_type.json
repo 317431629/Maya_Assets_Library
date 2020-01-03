@@ -1,0 +1,5 @@
+{
+	"<class 'pymel.core.nodetypes.File'>": "fileTextureName",
+	"<class 'pymel.core.nodetypes.RedshiftSprite'>": "tex0",
+	"<class 'pymel.core.nodetypes.RedshiftNormalMap'>": "tex0"
+}
