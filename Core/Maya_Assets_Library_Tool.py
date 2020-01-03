@@ -54,7 +54,7 @@ class LibraryTool(Library_UI.LibraryWindow):
 		dir_path = os.path.split(path)[0]
 		rmtree(dir_path)
 		type_path = os.path.dirname(dir_path)
-		if os.listdir(type_path) ==[]:
+		if not os.listdir(type_path):
 			os.removedirs(type_path)
 
 	# _________________Copy Maya Source images_____________________#
