@@ -16,17 +16,19 @@ class DataBase(object):
 		self.library_path = "{}/Library".format(sys.path[-1])
 		self.conn = sqlite3.connect(self.data_path)
 		self.cursor = self.conn.cursor()
-		self.cursor.execute("create table if not exists assets(assets_name,assets_type, assets_path,assets_image)")
+		self.cursor.execute("create table if not exists assets(assets_name,assets_type, assets_path, renderer, assets_image)")
 		self.initialization_data()
 
 	def initialization_data(self):
-		for mode in os.listdir(self.library_path):
-			for assets in os.listdir(os.path.join(self.library_path, mode)):
-				assets_name = "{}.ma".format(assets)
-				assets_type = mode
-				assets_path = os.path.join(self.library_path, mode, assets, assets_name)
-				assets_image = os.path.join(self.library_path, mode, assets, "{}.png".format(assets))
-				self.insert_data(assets_name, assets_type, assets_path, assets_image)
+		if not os.path.exists(self.data_path):  # 若数据库不存在即初始化数据库
+			for mode in os.listdir(self.library_path):
+				for assets in os.listdir(os.path.join(self.library_path, mode)):
+					assets_name = "{}.ma".format(assets)
+					assets_type = mode
+					assets_path = os.path.join(self.library_path, mode, assets, assets_name)
+					renderer = ''
+					assets_image = os.path.join(self.library_path, mode, assets, "{}.png".format(assets))
+					self.insert_data(assets_name, assets_type, assets_path, renderer, assets_image)
 
 	def get_sel_data(self, assets_name):
 		self.cursor.execute("SELECT * FROM assets WHERE assets_name == '{}'".format(assets_name))
@@ -44,12 +46,12 @@ class DataBase(object):
 		self.cursor.execute("SELECT * FROM assets")
 		return self.cursor.fetchall()
 
-	def insert_data(self, assets_name, assets_type, assets_path, assets_image):
+	def insert_data(self, assets_name, assets_type, assets_path, renderer, assets_image):
 		self.cursor.execute("SELECT * FROM assets WHERE assets_name = '{}'".format(assets_name))
 		if self.cursor.fetchone():
 			pass
 		else:
-			self.cursor.execute("INSERT INTO assets (assets_name, assets_type, assets_path, assets_image) VALUES ('{}', '{}','{}','{}')".format(assets_name, assets_type, assets_path, assets_image))
+			self.cursor.execute("INSERT INTO assets (assets_name, assets_type, assets_path, renderer, assets_image) VALUES ('{}', '{}','{}','{}','{}')".format(assets_name, assets_type, assets_path, renderer, assets_image))
 		self.conn.commit()
 
 	def delete_data(self, assets_name):

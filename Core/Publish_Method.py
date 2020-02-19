@@ -11,12 +11,16 @@ import pymel.core as pm
 import sys
 import json
 from Core import Publish_UI
+from Core import Creat_Data
+
 reload(Publish_UI)
 
 
 class PublishFoo(Publish_UI.PublishUI):
 	def __init__(self):
 		super(PublishFoo, self).__init__()
+		self.db_path = "{}/Data/data.db".format(sys.path[-1])
+		self.database = Creat_Data.DataBase(self.db_path)
 		self.data_path = os.path.join(sys.path[-1], 'Data', "Shader_type.json")
 		with open(self.data_path, "r") as f:
 			self.image_type = json.loads(f.read())
@@ -37,6 +41,7 @@ class PublishFoo(Publish_UI.PublishUI):
 	def get_assets_data(self):
 		assets_name = self.assets_name_line.text()
 		assets_type = self.assets_type_line.text()
+		renderer = self.renderer_type.currentText()
 		assets_path = os.path.join(
 									self.library_path, assets_type, assets_name,
 									"{}.ma".format(assets_name)
@@ -45,7 +50,7 @@ class PublishFoo(Publish_UI.PublishUI):
 									self.library_path, assets_type, assets_name,
 									"{}.png".format(assets_name)
 									).replace('\\', '/')
-		return assets_name, assets_type, assets_path, assets_image
+		return assets_name, assets_type, assets_path, renderer, assets_image
 
 	@staticmethod
 	def save_file(path):
@@ -57,7 +62,8 @@ class PublishFoo(Publish_UI.PublishUI):
 		print(u'文件另存为：{}'.format(path))
 
 	def get_maya_image(self):
-		assets_name, assets_type, assets_path, assets_image = self.get_assets_data()
+		# todo: 带有缓存的物体会报错
+		assets_name, assets_type, assets_path, renderer, assets_image = self.get_assets_data()
 		texture = pm.ls(textures=True)
 		for i in texture:
 			image_attr = pm.PyNode("{}.{}".format(i, self.image_type[str(type(i))]))
@@ -85,7 +91,7 @@ class PublishFoo(Publish_UI.PublishUI):
 	# _________import Mod_______________________#
 
 	def publish_to_library(self):
-		assets_name, assets_type, assets_path, assets_image = self.get_assets_data()
+		assets_name, assets_type, assets_path, renderer, assets_image = self.get_assets_data()
 		# # ________________copy to library____________________________________________#
 
 		self.get_maya_image()  # 拷贝贴图文件
@@ -94,8 +100,22 @@ class PublishFoo(Publish_UI.PublishUI):
 
 		shutil.copy2(self.assets_image_line.text(), assets_image)  # 拷贝预览图片
 
+		if self.assets_proxy.isChecked():
+			self.export_proxy(assets_path)
+
+		self.database.insert_data(assets_name, assets_type, assets_path, renderer, assets_image)
+
 		QtWidgets.QMessageBox.information(self, '', 'You have successfully published your package', QtWidgets.QMessageBox.Yes)
 		self.close()
+
+	def export_proxy(self, assets_path):
+		pm.select(pm.ls(type="mesh"))
+		if self.renderer_type.currentText() == "Redshift":
+			file_path = "{}.rs".format(os.path.splitext(assets_path)[0])
+			pm.rsProxy(fp=file_path, sl=True)
+		elif self.renderer_type.currentText() == "Arnold":
+			file_path = "{}.ass".format(os.path.splitext(assets_path)[0])
+			pm.arnoldExportAss(f=file_path)
 
 
 if __name__ == '__main__':

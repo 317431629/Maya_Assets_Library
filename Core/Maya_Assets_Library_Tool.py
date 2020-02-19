@@ -19,6 +19,8 @@ class LibraryTool(Library_UI.LibraryWindow):
 		super(LibraryTool, self).__init__()
 		self.method = method
 		self.library_path = "{}/Library".format(sys.path[-1])
+		if not os.path.exists(self.library_path):
+			os.mkdir(self.library_path)
 
 	def connect_ui(self):
 		super(LibraryTool, self).connect_ui()
@@ -62,8 +64,18 @@ class LibraryTool(Library_UI.LibraryWindow):
 		assets_path = self.assets_data[2]
 		pm.importFile(assets_path)
 
+	def import_proxy(self):
+		assets_path = self.assets_data[2]
+		rs_proxy_path = "{}.rs".format(os.path.splitext(assets_path)[0])
+		if os.path.exists(rs_proxy_path):
+			proxy = pm.PyNode(pm.mel.redshiftCreateProxyOld(rs_proxy_path)[0])
+			proxy.rename(os.path.split(rs_proxy_path)[-1].split(".rs")[0])
+		elif os.path.exists("{}.ass".format(os.path.splitext(assets_path)[0])):
+			# proxy =
+			pass
+
 	def closeEvent(self, event):
-		self.database.remove_data()
+		# self.database.remove_data()
 		self.close()
 
 

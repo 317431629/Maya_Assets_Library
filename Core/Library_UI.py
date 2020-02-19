@@ -125,6 +125,7 @@ class LibraryWindow(QtWidgets.QMainWindow):
 
 		self.remove_button = QtWidgets.QPushButton('Remove Assets from Library')
 		self.import_button = QtWidgets.QPushButton('Import to Scene')
+		self.import_proxy_button = QtWidgets.QPushButton("Import Proxy to Scene")
 		self.publish_button = QtWidgets.QPushButton('Publish Assets to Library')
 		self.remove_button.setMinimumHeight(30)
 		self.import_button.setMinimumHeight(30)
@@ -133,6 +134,7 @@ class LibraryWindow(QtWidgets.QMainWindow):
 		self.button_layout.addStretch()
 		self.button_layout.addWidget(self.remove_button)
 		self.button_layout.addWidget(self.import_button)
+		self.button_layout.addWidget(self.import_proxy_button)
 		self.button_layout.addWidget(self.publish_button)
 
 		self.main_layout.addWidget(self.splitter)
@@ -180,9 +182,9 @@ class LibraryWindow(QtWidgets.QMainWindow):
 		return self.model
 
 	def get_data_for_sel(self, model_index):
-		assets = "{}.ma".format(model_index.data())
-		assets_name, assets_type, assets_path, assets_image = self.database.get_sel_data(assets)
-		return assets_name, assets_type, assets_path, assets_image
+		assets = model_index.data()
+		assets_name, assets_type, assets_path, renderer, assets_image = self.database.get_sel_data(assets)
+		return assets_name, assets_type, assets_path, renderer, assets_image
 
 	def set_information(self, model_index):
 		def format_size(assets_bytes):
@@ -198,10 +200,10 @@ class LibraryWindow(QtWidgets.QMainWindow):
 			else:
 				return "%fkb" % (kb)
 		self.assets_data = self.get_data_for_sel(model_index)
-		assets_name, assets_type, assets_path, assets_image = self.assets_data
+		assets_name, assets_type, assets_path, renderer, assets_image = self.assets_data
 		assets_size = format_size(os.path.getsize(assets_path))
-		information = "\n\b\b{}\n".join(["Assets_name:", "Assets_type:", "Assets_path:", "Assets_size:", ""]).format(
-						model_index.data(), assets_type, assets_path, assets_size)
+		information = "\n\b\b{}\n".join(["Assets_name:", "Assets_type:", "Assets_path:", "Renderer:", "Assets_size:", ""]).format(
+						model_index.data(), assets_type, assets_path, renderer, assets_size)
 		self.information_text.setText(information)
 		return self.assets_data
 

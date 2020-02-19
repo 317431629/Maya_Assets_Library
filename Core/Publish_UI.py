@@ -8,6 +8,7 @@ from PySide2 import QtCore
 from PySide2 import QtGui
 import sys
 
+
 class PublishUI(QtWidgets.QDialog):
 	def __init__(self):
 		super(PublishUI, self).__init__()
@@ -19,6 +20,12 @@ class PublishUI(QtWidgets.QDialog):
 
 		self.assets_group_box = QtWidgets.QGroupBox('Assets_Setting')
 		self.assets_layout = QtWidgets.QVBoxLayout(self.assets_group_box)
+
+		self.renderer_layout = QtWidgets.QHBoxLayout()
+		self.renderer_type_label = QtWidgets.QLabel("Renderer：")
+		self.renderer_type = QtWidgets.QComboBox()
+		self.renderer_type.addItem("Arnold")
+		self.renderer_type.addItem("Redshift")
 
 		self.assets_name_layout = QtWidgets.QHBoxLayout()
 		self.assets_name_label = QtWidgets.QLabel('Assets_Name:')
@@ -40,6 +47,9 @@ class PublishUI(QtWidgets.QDialog):
 		self.assets_image_line.setMinimumHeight(35)
 		self.assets_image_button = QtWidgets.QPushButton('Open')
 
+		self.assets_proxy_layout = QtWidgets.QHBoxLayout()
+		self.assets_proxy = QtWidgets.QCheckBox("Export Proxy")
+
 		self.preview_group_box = QtWidgets.QGroupBox('Assets Preview')
 		self.preview_layout = QtWidgets.QHBoxLayout(self.preview_group_box)
 
@@ -49,7 +59,7 @@ class PublishUI(QtWidgets.QDialog):
 		self.show_list_label.setPixmap(pix_map)
 		self.show_list_label.setMinimumSize(120, 120)
 		self.show_list_text = QtWidgets.QTextEdit()
-		self.show_list_text.setText("\n\b\b\n".join(["Assets_name:", "Assets_type:", ""]))
+		self.show_list_text.setText("\n\b\b\n".join(["Assets_name:", "Assets_type:", "Renderer:", ""]))
 		self.show_list_text.setReadOnly(True)
 
 		self.publish_group_box = QtWidgets.QGroupBox('Publish')
@@ -60,11 +70,17 @@ class PublishUI(QtWidgets.QDialog):
 		self.set_stylesheet()
 
 	def setup_ui(self):
+		self.renderer_layout.addStretch()
+		self.renderer_layout.addWidget(self.renderer_type_label)
+		self.renderer_layout.addWidget(self.renderer_type)
+
 		self.assets_name_layout.addWidget(self.assets_name_label)
 		self.assets_name_layout.addWidget(self.assets_name_line)
 
 		self.assets_type_layout.addWidget(self.assets_type_label)
 		self.assets_type_layout.addWidget(self.assets_type_line)
+
+		self.assets_proxy_layout.addWidget(self.assets_proxy)
 
 		self.assets_image_layout.addWidget(self.assets_image_label)
 		self.assets_image_layout.addWidget(self.assets_image_line)
@@ -76,9 +92,11 @@ class PublishUI(QtWidgets.QDialog):
 		self.publish_layout.addStretch()
 		self.publish_layout.addWidget(self.publish_button)
 
+		self.assets_layout.addLayout(self.renderer_layout)
 		self.assets_layout.addLayout(self.assets_name_layout)
 		self.assets_layout.addLayout(self.assets_type_layout)
 		self.assets_layout.addLayout(self.assets_image_layout)
+		self.assets_layout.addLayout(self.assets_proxy_layout)
 
 		self.preview_layout.addWidget(self.show_splitter)
 
@@ -90,7 +108,8 @@ class PublishUI(QtWidgets.QDialog):
 	def set_preview_data(self):
 		assets_name = self.assets_name_line.text()
 		assets_type = self.assets_type_line.text()
-		data = "\n\b\b{}\n".join(["Assets_name:", "Assets_type:", ""]).format(assets_name, assets_type)
+		renderer = self.renderer_type.currentText()
+		data = "\n\b\b{}\n".join(["Assets_name:", "Assets_type:", "Renderer:", ""]).format(assets_name, assets_type, renderer)
 		self.show_list_text.setText(data)
 
 	def set_stylesheet(self):
