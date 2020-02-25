@@ -12,17 +12,16 @@ class CheckUp(object):
 		pass
 
 	def check_outline(self):
-		ifRight = 0
 		self.theCountOfParentDag = 0
-        for one in pm.ls(dag=True,type='transform',l=True):
-            if not 'persp' in one and not 'top' in one and not 'front' in one and not 'side' in one:
-                if len([oneStr for oneStr in one if '|' in oneStr])==1:
-					self.theCountOfParentDag+=1
-        if self.theCountOfParentDag > 10:
-            self.theValueUP(1, 10, u'大纲顶层分组超过10个，可能有些凌乱\n')
-            ifRight = 1
-        if ifRight == 0:
-            self.theValueUP(1, 0, self.No)
+		for one in pm.ls(dag=True, type='transform', long=True):
+			if not 'persp' in one and not 'top' in one and not 'front' in one and not 'side' in one:
+				print one
+				if len([oneStr for oneStr in one if '|' in oneStr]) == 1:
+					self.theCountOfParentDag += 1
+		# print self.theCountOfParentDag
+		if self.theCountOfParentDag > 10:
+			print(1, 10, u'大纲顶层分组超过10个，可能有些凌乱\n')
+
 
 	def check_texture(self):
 		'''
@@ -62,4 +61,4 @@ class CheckUp(object):
 
 if __name__ == '__main__':
 	checkup = CheckUp()
-	checkup.checkFaceMaterial()
+	checkup.check_outline()

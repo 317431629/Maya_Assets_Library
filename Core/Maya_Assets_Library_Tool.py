@@ -4,8 +4,10 @@
 # @Software :Maya
 # @E-mail    :317431629@qq.com
 import pymel.core as pm
+import mtoa
 from Core import Library_UI
 from Core import Library_Method
+from PySide2 import QtWidgets
 import os
 import sys
 from shutil import rmtree
@@ -27,6 +29,7 @@ class LibraryTool(Library_UI.LibraryWindow):
 		self.refresh_button.clicked.connect(self.refresh_list)
 		self.remove_button.clicked.connect(self.remove_assets)
 		self.import_button.clicked.connect(self.import_file)
+		self.import_proxy_button.clicked.connect(self.import_proxy)
 
 	# ____________Refresh list__________________#
 	def refresh_list(self):
@@ -47,17 +50,25 @@ class LibraryTool(Library_UI.LibraryWindow):
 		print(u"已移除出库！")
 
 	def remove_form_list(self):
-		index = self.list_view.currentIndex().row()
-		item_model = self.list_view.model()
-		item_model.removeRow(index)
+		item = self.file_list.currentItem()
+		self.file_list.takeItem(self.file_list.row(item))
+		if not self.file_list.count():
+			index = self.list_view.currentIndex().row()
+			item_model = self.list_view.model()
+			item_model.removeRow(index)
 
 	@staticmethod
 	def del_assets_from_lib(path):
 		dir_path = os.path.split(path)[0]
-		rmtree(dir_path)
-		type_path = os.path.dirname(dir_path)
-		if not os.listdir(type_path):
-			os.removedirs(type_path)
+		ma_files = [ma_file for ma_file in os.listdir(dir_path) if ".ma" in ma_file]
+		if len(ma_files) > 1:
+			os.remove(path)
+		else:
+			rmtree(dir_path)
+			type_path = os.path.dirname(dir_path)
+			print os.listdir(type_path)
+			if not os.listdir(type_path):
+				os.removedirs(type_path)
 
 	# _________________Copy Maya Source images_____________________#
 	def import_file(self):
@@ -67,12 +78,21 @@ class LibraryTool(Library_UI.LibraryWindow):
 	def import_proxy(self):
 		assets_path = self.assets_data[2]
 		rs_proxy_path = "{}.rs".format(os.path.splitext(assets_path)[0])
-		if os.path.exists(rs_proxy_path):
-			proxy = pm.PyNode(pm.mel.redshiftCreateProxyOld(rs_proxy_path)[0])
-			proxy.rename(os.path.split(rs_proxy_path)[-1].split(".rs")[0])
-		elif os.path.exists("{}.ass".format(os.path.splitext(assets_path)[0])):
-			# proxy =
-			pass
+		ar_proxy_path = "{}.ass".format(os.path.splitext(assets_path)[0])
+		if '_rs' in os.path.splitext(assets_path)[0]:
+			if os.path.exists(rs_proxy_path):
+				proxy = pm.PyNode(pm.mel.redshiftCreateProxyOld(rs_proxy_path)[0])
+				proxy.rename(os.path.split(rs_proxy_path)[-1].split(".rs")[0])
+			else:
+				QtWidgets.QMessageBox.information(self, 'Information', '不存在代理物体', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.Yes)
+		elif '_ar' in os.path.splitext(assets_path)[0]:
+			if os.path.exists("{}.ass".format(os.path.splitext(assets_path)[0])):
+				proxy = mtoa.core.createStandIn(ar_proxy_path)
+				proxy.rename(os.path.split(ar_proxy_path)[-1].split(".ass")[0])
+			else:
+				QtWidgets.QMessageBox.information(self, 'Information', '不存在代理物体', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.Yes)
+		else:
+			QtWidgets.QMessageBox.information(self, 'Information', '不存在代理物体', QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.Yes)
 
 	def closeEvent(self, event):
 		# self.database.remove_data()

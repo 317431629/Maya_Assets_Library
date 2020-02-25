@@ -128,9 +128,8 @@ class PublishUI(QtWidgets.QDialog):
 							}
 							QPushButton{
 							font: 75 9pt "Sitka Small";
-							border: 2px solid gray;
-							border-radius: 4px;
 							}
+							QPushButton:hover{color:black}
 							''')
 
 

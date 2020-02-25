@@ -31,8 +31,8 @@ class DataBase(object):
 					self.insert_data(assets_name, assets_type, assets_path, renderer, assets_image)
 
 	def get_sel_data(self, assets_name):
-		self.cursor.execute("SELECT * FROM assets WHERE assets_name == '{}'".format(assets_name))
-		return self.cursor.fetchone()
+		self.cursor.execute("SELECT * FROM assets WHERE assets_name LIKE '{}%'".format(assets_name))
+		return self.cursor.fetchall()
 
 	def get_type_data(self, assets_type):
 		self.cursor.execute("SELECT * FROM assets WHERE assets_type = '{}'".format(assets_type))

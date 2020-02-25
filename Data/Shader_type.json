@@ -1,5 +1,7 @@
 {
 	"<class 'pymel.core.nodetypes.File'>": "fileTextureName",
+	"<class 'pymel.core.nodetypes.AiImage'>": "filename",
 	"<class 'pymel.core.nodetypes.RedshiftSprite'>": "tex0",
-	"<class 'pymel.core.nodetypes.RedshiftNormalMap'>": "tex0"
+	"<class 'pymel.core.nodetypes.RedshiftNormalMap'>": "tex0",
+	"<class 'pymel.core.nodetypes.RedshiftBumpMap'>": "input"
 }

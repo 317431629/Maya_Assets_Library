@@ -12,7 +12,6 @@ import sys
 import json
 from Core import Publish_UI
 from Core import Creat_Data
-
 reload(Publish_UI)
 
 
@@ -42,13 +41,18 @@ class PublishFoo(Publish_UI.PublishUI):
 		assets_name = self.assets_name_line.text()
 		assets_type = self.assets_type_line.text()
 		renderer = self.renderer_type.currentText()
+		if self.renderer_type.currentText() == 'Redshift':
+			assets_name = "{}_rs".format(self.assets_name_line.text())
+
+		elif self.renderer_type.currentText() == 'Arnold':
+			assets_name = "{}_ar".format(self.assets_name_line.text())
 		assets_path = os.path.join(
-									self.library_path, assets_type, assets_name,
+									self.library_path, assets_type, assets_name[:-3],
 									"{}.ma".format(assets_name)
 									).replace('\\', '/')
 		assets_image = os.path.join(
-									self.library_path, assets_type, assets_name,
-									"{}.png".format(assets_name)
+									self.library_path, assets_type, assets_name[:-3],
+									"{}.png".format(assets_name[:-3])
 									).replace('\\', '/')
 		return assets_name, assets_type, assets_path, renderer, assets_image
 
@@ -68,9 +72,10 @@ class PublishFoo(Publish_UI.PublishUI):
 		for i in texture:
 			image_attr = pm.PyNode("{}.{}".format(i, self.image_type[str(type(i))]))
 			image_path, image_name = os.path.split(image_attr.get())
-			source_image_path = os.path.join(self.library_path, assets_type, assets_name, 'Sourceimages')
+			source_image_path = os.path.join(self.library_path, assets_type, assets_name[:-3], 'Sourceimages')
 			image_attr.set(os.path.join(source_image_path, image_name))
 			self.copy_source_image(image_name, image_path, source_image_path)
+
 
 	@staticmethod
 	def copy_source_image(image_name, image_path, source_image_path):
@@ -100,10 +105,10 @@ class PublishFoo(Publish_UI.PublishUI):
 
 		shutil.copy2(self.assets_image_line.text(), assets_image)  # 拷贝预览图片
 
+		self.database.insert_data(assets_name, assets_type, assets_path, renderer, assets_image)
+
 		if self.assets_proxy.isChecked():
 			self.export_proxy(assets_path)
-
-		self.database.insert_data(assets_name, assets_type, assets_path, renderer, assets_image)
 
 		QtWidgets.QMessageBox.information(self, '', 'You have successfully published your package', QtWidgets.QMessageBox.Yes)
 		self.close()
@@ -115,7 +120,7 @@ class PublishFoo(Publish_UI.PublishUI):
 			pm.rsProxy(fp=file_path, sl=True)
 		elif self.renderer_type.currentText() == "Arnold":
 			file_path = "{}.ass".format(os.path.splitext(assets_path)[0])
-			pm.arnoldExportAss(f=file_path)
+			pm.arnoldExportAss(f=file_path, s=True, shadowLinks=1, mask=6399, lightLinks=1, boundingBox=True, cam='perspShape')
 
 
 if __name__ == '__main__':

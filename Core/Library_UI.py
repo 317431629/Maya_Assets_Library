@@ -11,6 +11,7 @@ from Core import Publish_Method
 from Script import Custom_SearchBox
 import os
 import sys
+from pprint import pprint
 
 reload(Creat_Data)
 reload(Publish_Method)
@@ -23,6 +24,7 @@ class LibraryWindow(QtWidgets.QMainWindow):
 		self.data_path = "{}/Data/data.db".format(sys.path[-1])
 		self.database = Creat_Data.DataBase(self.data_path)
 		self.data = self.database.get_all_data()
+		# pprint(self.data)
 		self.publish_ui = Publish_Method.PublishFoo()
 		self.about_ui = AboutUI()
 		self.setting_ui = ProjectSetUI()
@@ -30,6 +32,8 @@ class LibraryWindow(QtWidgets.QMainWindow):
 		self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 		self.assets_data = []
 		self.model = []
+		self.ma_image = QtGui.QIcon("{}/Icon/hsFileMayaMA.png".format(sys.path[-1]))
+		self.mb_image = QtGui.QIcon("{}/Icon/hsFileMayaMB.png".format(sys.path[-1]))
 		self.setGeometry(100, 100, 1350, 660)
 		self.image_size = QtCore.QSize(220, 220)
 		self.setup_ui()
@@ -113,13 +117,28 @@ class LibraryWindow(QtWidgets.QMainWindow):
 		self.setting_layout.addWidget(self.type_combobox)
 		self.setting_layout.addStretch()
 		# _____________Information______________#
+		self.information_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+
+		self.information_group = QtWidgets.QGroupBox("Information")
+		self.information_group.setMaximumSize(180, 220)
+		self.information_layout = QtWidgets.QHBoxLayout(self.information_group)
 		self.information_text = QtWidgets.QTextEdit()
 		self.information_text.setMaximumWidth(self.splitter.width()/3)
 		self.information_text.setReadOnly(True)
+		self.information_layout.addWidget(self.information_text)
+
+		self.file_group = QtWidgets.QGroupBox("File_List")
+		self.file_layout = QtWidgets.QHBoxLayout(self.file_group)
+		self.file_list = QtWidgets.QListWidget()
+		self.file_list.setIconSize(QtCore.QSize(50, 50))
+		self.file_layout.addWidget(self.file_list)
+
+		self.information_splitter.addWidget(self.information_group)
+		self.information_splitter.addWidget(self.file_group)
 		# self.information_text.setStyleSheet('background-color:black')
 		self.splitter.addWidget(self.setting_frame)
 		self.splitter.addWidget(self.listview_frame)
-		self.splitter.addWidget(self.information_text)
+		self.splitter.addWidget(self.information_splitter)
 		# _____________Button___________________#
 		self.button_layout = QtWidgets.QHBoxLayout()
 
@@ -146,28 +165,34 @@ class LibraryWindow(QtWidgets.QMainWindow):
 		self.set_mode()
 		self.type_combobox.currentIndexChanged.connect(self.set_mode)
 		self.search_line.textChanged.connect(self.search_assets)
-		self.list_view.clicked.connect(self.set_information)
+		self.list_view.clicked.connect(self.file_list_information)
+		self.file_list.clicked.connect(self.set_information)
 		self.publish_button.clicked.connect(self.publish_ui.show)
 		self.about_Action.triggered.connect(self.about_ui.show)
 		self.setting_Action.triggered.connect(self.setting_ui.show)
 
 	def create_mod(self, assets_type, assets_filter):
+		assets_names = []
 		try:
 			list_mod = QtGui.QStandardItemModel()
 		except AttributeError:
 			list_mod = QtCore.QStandardItemModel()
 		if isinstance(assets_filter, int) or assets_filter == 'combobox':
 			for data in self.database.get_type_data(assets_type):
-				assets_name = data[0].split('.ma')[0]
-				assets_image = data[-1]
-				item = self.creat_list_item(assets_image, assets_name)
-				list_mod.appendRow(item)
+				assets_name = data[0].split('.ma')[0][:-3]
+				if assets_name not in assets_names:
+					assets_image = data[-1]
+					item = self.creat_list_item(assets_image, assets_name)
+					list_mod.appendRow(item)
+					assets_names.append(assets_name)
 		else:
 			for data in self.database.get_filter_data(assets_type, assets_filter):
-				assets_name = data[0].split('.ma')[0]
-				assets_image = data[-1]
-				item = self.creat_list_item(assets_image, assets_name)
-				list_mod.appendRow(item)
+				assets_name = data[0].split('.ma')[0][:-3]
+				if assets_name not in assets_names:
+					assets_image = data[-1]
+					item = self.creat_list_item(assets_image, assets_name)
+					list_mod.appendRow(item)
+					assets_names.append(assets_name)
 		return list_mod
 
 	@staticmethod
@@ -183,10 +208,16 @@ class LibraryWindow(QtWidgets.QMainWindow):
 
 	def get_data_for_sel(self, model_index):
 		assets = model_index.data()
-		assets_name, assets_type, assets_path, renderer, assets_image = self.database.get_sel_data(assets)
-		return assets_name, assets_type, assets_path, renderer, assets_image
+		return self.database.get_sel_data(assets)
 
-	def set_information(self, model_index):
+	def file_list_information(self, model_index):
+		self.file_list.clear()
+		for data in self.get_data_for_sel(model_index):
+			assets_name, assets_type, assets_path, renderer, assets_image = data
+			list_item = QtWidgets.QListWidgetItem(self.ma_image, assets_name)
+			self.file_list.addItem(list_item)
+
+	def set_information(self):
 		def format_size(assets_bytes):
 			assets_bytes = float(assets_bytes)
 			kb = assets_bytes / 1024
@@ -199,11 +230,11 @@ class LibraryWindow(QtWidgets.QMainWindow):
 					return "%fM" % (M)
 			else:
 				return "%fkb" % (kb)
-		self.assets_data = self.get_data_for_sel(model_index)
+		self.assets_data = self.database.get_sel_data(self.file_list.currentItem().text())[0]
 		assets_name, assets_type, assets_path, renderer, assets_image = self.assets_data
 		assets_size = format_size(os.path.getsize(assets_path))
 		information = "\n\b\b{}\n".join(["Assets_name:", "Assets_type:", "Assets_path:", "Renderer:", "Assets_size:", ""]).format(
-						model_index.data(), assets_type, assets_path, renderer, assets_size)
+						assets_name[:-3], assets_type, assets_path, renderer, assets_size)
 		self.information_text.setText(information)
 		return self.assets_data
 
